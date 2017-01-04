@@ -22,21 +22,22 @@
 // THE SOFTWARE.
 
 #import <UIKit/UIKit.h>
-#import "ZFPlayer.h"
+#import <ZFDownload/ZFDownloadManager.h>
 
-typedef void(^ZFDownloadBlock)(void);
+typedef void(^ZFBtnClickBlock)(void);
 
 @interface ZFDownloadingCell : UITableViewCell
 
-@property (weak, nonatomic) IBOutlet UILabel *fileNameLabel;
-@property (weak, nonatomic) IBOutlet UIProgressView *progress;
-@property (weak, nonatomic) IBOutlet UILabel *progressLabel;
-@property (weak, nonatomic) IBOutlet UILabel *speedLabel;
-@property (weak, nonatomic) IBOutlet UIButton *downloadBtn;
-@property (nonatomic, copy) ZFDownloadBlock downloadBlock;
+@property (weak, nonatomic  ) IBOutlet UILabel          *fileNameLabel;
+@property (weak, nonatomic  ) IBOutlet UIProgressView   *progress;
+@property (weak, nonatomic  ) IBOutlet UILabel          *progressLabel;
+@property (weak, nonatomic  ) IBOutlet UILabel          *speedLabel;
+@property (weak, nonatomic  ) IBOutlet UIButton         *downloadBtn;
+/** 下载按钮点击回调block */
+@property (nonatomic, copy  ) ZFBtnClickBlock  btnClickBlock;
+/** 下载信息模型 */
+@property (nonatomic, strong) ZFFileModel      *fileInfo;
+/** 该文件发起的请求 */
+@property (nonatomic,retain ) ZFHttpRequest    *request;
 
-@property (nonatomic, strong) ZFSessionModel *sessionModel;
-
-- (void)addDownloadAnimation;
-- (void)removeDownloadAnimtion;
 @end

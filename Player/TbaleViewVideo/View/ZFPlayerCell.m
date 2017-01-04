@@ -33,8 +33,10 @@
 @implementation ZFPlayerCell
 
 - (void)awakeFromNib {
+    [super awakeFromNib];
     // Initialization code
     self.selectionStyle = UITableViewCellSelectionStyleNone;
+    [self layoutIfNeeded];
     [self cutRoundView:self.avatarImageView];
     
     // 设置imageView的tag，在PlayerView中取（建议设置100以上）
@@ -47,6 +49,7 @@
     [self.picView addSubview:self.playBtn];
     [self.playBtn mas_makeConstraints:^(MASConstraintMaker *make) {
         make.center.equalTo(self.picView);
+        make.width.height.mas_equalTo(50);
     }];
 }
 
@@ -67,7 +70,7 @@
     // Configure the view for the selected state
 }
 
--(void)setModel:(ZFPlayerModel *)model
+-(void)setModel:(ZFVideoModel *)model
 {
     [self.picView sd_setImageWithURL:[NSURL URLWithString:model.coverForFeed] placeholderImage:[UIImage imageNamed:@"loading_bgView"]];
     self.titleLabel.text = model.title;

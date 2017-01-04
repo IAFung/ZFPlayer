@@ -24,16 +24,13 @@
 #import "ZFDownloadingCell.h"
 
 @interface ZFDownloadingCell ()
-@property (nonatomic, assign) BOOL hasDownloadAnimation;
+
 @end
 
 @implementation ZFDownloadingCell
 
 - (void)awakeFromNib {
     [super awakeFromNib];
-    // Initialization code
-    self.downloadBtn.clipsToBounds = true;
-    [self.downloadBtn setTitleColor:[UIColor blueColor] forState:UIControlStateNormal];
 }
 
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated {
@@ -43,67 +40,71 @@
 }
 
 /**
- *  添加下载的动画
- */
-- (void)addDownloadAnimation {
-    if(self.downloadBtn && !self.hasDownloadAnimation){
-        self.hasDownloadAnimation = YES;
-        //1.创建关键帧动画并设置动画属性
-        CAKeyframeAnimation *keyframeAnimation=[CAKeyframeAnimation animationWithKeyPath:@"position"];
-        
-        //2.设置关键帧,这里有四个关键帧
-        NSValue *key1 = [NSValue valueWithCGPoint:CGPointMake(self.downloadBtn.center.x, self.downloadBtn.frame.origin.y)];//对于关键帧动画初始值不能省略
-        NSValue *key2 = [NSValue valueWithCGPoint:CGPointMake(self.downloadBtn.center.x, self.downloadBtn.frame.size.height+self.downloadBtn.frame.origin.y)];
-        NSArray *values = @[key1,key2];
-        keyframeAnimation.values = values;
-        //设置其他属性
-        keyframeAnimation.duration = 1;
-        keyframeAnimation.repeatCount = MAXFLOAT;
-        
-        //3.添加动画到图层，添加动画后就会执行动画
-        [self.downloadBtn.layer addAnimation:keyframeAnimation forKey:@"downloadBtn"];
-        [self.downloadBtn setTitle:@"↓" forState:UIControlStateNormal];
-    }
-}
-
-/**
- *  移除下载button的动画
- */
-- (void)removeDownloadAnimtion {
-    _hasDownloadAnimation = NO;
-    [self.downloadBtn.layer removeAnimationForKey:@"downloadBtn"];
-    [self.downloadBtn setTitle:@"🕘" forState:UIControlStateNormal];
-}
-
-/**
  *  暂停、下载
  *
  *  @param sender UIButton
  */
-- (IBAction)clickDownload:(UIButton *)sender {
-    if (self.downloadBlock) {
-        self.downloadBlock();
+- (IBAction)clickDownload:(UIButton *)sender
+{
+    // 执行操作过程中应该禁止该按键的响应 否则会引起异常
+    sender.userInteractionEnabled = NO;
+    ZFFileModel *downFile = self.fileInfo;
+    ZFDownloadManager *filedownmanage = [ZFDownloadManager sharedDownloadManager];
+    if(downFile.downloadState == ZFDownloading) { //文件正在下载，点击之后暂停下载 有可能进入等待状态
+        self.downloadBtn.selected = YES;
+        [filedownmanage stopRequest:self.request];
+    } else {
+         self.downloadBtn.selected = NO;
+        [filedownmanage resumeRequest:self.request];
+    }
+    
+    // 暂停意味着这个Cell里的ASIHttprequest已被释放，要及时更新table的数据，使最新的ASIHttpreqst控制Cell
+    if (self.btnClickBlock) {
+        self.btnClickBlock();
+    }
+    sender.userInteractionEnabled = YES;
+}
+
+- (void)setFileInfo:(ZFFileModel *)fileInfo
+{
+    _fileInfo = fileInfo;
+    self.fileNameLabel.text = fileInfo.fileName;
+    // 服务器可能响应的慢，拿不到视频总长度 && 不是下载状态
+    if ([fileInfo.fileSize longLongValue] == 0 && !(fileInfo.downloadState == ZFDownloading)) {
+        self.progressLabel.text = @"";
+        if (fileInfo.downloadState == ZFStopDownload) {
+            self.speedLabel.text = @"已暂停";
+        } else if (fileInfo.downloadState == ZFWillDownload) {
+            self.downloadBtn.selected = YES;
+            self.speedLabel.text = @"等待下载";
+        }
+        self.progress.progress = 0.0;
+        return;
+    }
+    NSString *currentSize = [ZFCommonHelper getFileSizeString:fileInfo.fileReceivedSize];
+    NSString *totalSize = [ZFCommonHelper getFileSizeString:fileInfo.fileSize];
+    // 下载进度
+    float progress = (float)[fileInfo.fileReceivedSize longLongValue] / [fileInfo.fileSize longLongValue];
+    
+    self.progressLabel.text = [NSString stringWithFormat:@"%@ / %@ (%.2f%%)",currentSize, totalSize, progress*100];
+    
+    self.progress.progress = progress;
+    
+    NSString *spped = [NSString stringWithFormat:@"%@/S",[ZFCommonHelper getFileSizeString:[NSString stringWithFormat:@"%lu",[ASIHTTPRequest averageBandwidthUsedPerSecond]]]];
+    self.speedLabel.text = spped;
+    
+    if (fileInfo.downloadState == ZFDownloading) { //文件正在下载
+        self.downloadBtn.selected = NO;
+    } else if (fileInfo.downloadState == ZFStopDownload&&!fileInfo.error) {
+        self.downloadBtn.selected = YES;
+        self.speedLabel.text = @"已暂停";
+    }else if (fileInfo.downloadState == ZFWillDownload&&!fileInfo.error) {
+        self.downloadBtn.selected = YES;
+        self.speedLabel.text = @"等待下载";
+    } else if (fileInfo.error) {
+        self.downloadBtn.selected = YES;
+        self.speedLabel.text = @"错误";
     }
 }
-
-/**
- *  model setter
- *
- *  @param sessionModel sessionModel 
- */
-- (void)setSessionModel:(ZFSessionModel *)sessionModel
-{
-    _sessionModel = sessionModel;
-    self.fileNameLabel.text = sessionModel.fileName;
-    NSUInteger receivedSize = ZFDownloadLength(sessionModel.url);
-    NSString *writtenSize = [NSString stringWithFormat:@"%.2f %@",
-                                                     [sessionModel calculateFileSizeInUnit:(unsigned long long)receivedSize],
-                                                     [sessionModel calculateUnit:(unsigned long long)receivedSize]];
-    CGFloat progress = 1.0 * receivedSize / sessionModel.totalLength;
-    self.progressLabel.text = [NSString stringWithFormat:@"%@/%@ (%.2f%%)",writtenSize,sessionModel.totalSize,progress*100];
-    self.progress.progress = progress;
-    self.speedLabel.text = @"已暂停";
-}
-
 
 @end

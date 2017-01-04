@@ -33,7 +33,8 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.dataSource = @[@"http://wvideo.spriteapp.cn/video/2016/0328/56f8ec01d9bfe_wpd.mp4",
+    self.dataSource = @[@"http://7xqhmn.media1.z0.glb.clouddn.com/femorning-20161106.mp4",
+                        @"http://wvideo.spriteapp.cn/video/2016/0328/56f8ec01d9bfe_wpd.mp4",
                         @"http://baobab.wdjcdn.com/1456117847747a_x264.mp4",
                         @"http://baobab.wdjcdn.com/14525705791193.mp4",
                         @"http://baobab.wdjcdn.com/1456459181808howtoloseweight_x264.mp4",
@@ -51,11 +52,10 @@
                         @"http://baobab.wdjcdn.com/1456231710844S(24).mp4"];
 }
 
--(void)viewWillAppear:(BOOL)animated
+// 必须支持转屏，但只是只支持竖屏，否则横屏启动起来页面是横的
+- (BOOL)shouldAutorotate
 {
-    [super viewWillAppear:animated];
-    self.navigationController.navigationBarHidden = NO;
-    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleDefault animated:YES];
+    return YES;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
@@ -66,7 +66,7 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"netListCell"];
-    cell.textLabel.text = [NSString stringWithFormat:@"网络视频%zd",indexPath.row+1];
+    cell.textLabel.text   = [NSString stringWithFormat:@"网络视频%zd",indexPath.row+1];
     return cell;
 }
 
@@ -74,7 +74,6 @@
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
-
 
 #pragma mark - Navigation
 

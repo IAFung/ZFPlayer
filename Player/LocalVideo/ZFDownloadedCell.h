@@ -22,10 +22,13 @@
 // THE SOFTWARE.
 
 #import <UIKit/UIKit.h>
-#import "ZFPlayer.h"
+#import <ZFDownload/ZFDownloadManager.h>
 
 @interface ZFDownloadedCell : UITableViewCell
+
 @property (weak, nonatomic) IBOutlet UILabel *fileNameLabel;
 @property (weak, nonatomic) IBOutlet UILabel *sizeLabel;
-@property (nonatomic, strong) ZFSessionModel *sessionModel;
+/** 下载信息模型 */
+@property (nonatomic, strong) ZFFileModel *fileInfo;
+
 @end
